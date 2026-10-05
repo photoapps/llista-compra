@@ -445,7 +445,8 @@ function status(kind,txt){$("dot").className="dot "+(kind||"");$("statusTxt").te
 function notice(msg,err){const n=$("notice");n.textContent=msg||"";n.hidden=!msg;n.classList.toggle("err",!!err)}
 
 /* ---------- Dropbox OAuth (PKCE, sense secret) ---------- */
-const redirectUri=()=>location.origin+location.pathname;
+// sempre la carpeta, sense "index.html", perquè coincideixi amb la Redirect URI de Dropbox
+const redirectUri=()=>location.origin+location.pathname.replace(/index\.html$/,"");
 let tok=LS.get("tok",null); // {access, refresh, exp}
 
 function b64url(buf){return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
