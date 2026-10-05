@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f7a52">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="La compra">
+<title>La Compra</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231f7a52'/%3E%3Cpath d='M16 20h5l5 22h18l4-15H24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='29' cy='49' r='3' fill='white'/%3E%3Ccircle cx='42' cy='49' r='3' fill='white'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* ============================================================
+   CONFIGURACIÓ — posa aquí la "App key" de la teva app de Dropbox
+   (també es pot entrar des de la pantalla de configuració)
+   ============================================================ */
+</style>
+<script>
+const CONFIG = {
+  DROPBOX_APP_KEY: "",                     // ex: "abc123xyz456"
+  FILE_PATH: "/VARIS/Llista_compra/llista_compra.xlsx"   // carpeta compartida + fitxer Excel
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* Layout: one-column phone app — sticky header (add bar + tabs), aisle-grouped list, done items sink to the basket tray; history tab for one-tap re-adding */
+:root{
+  --bg:#f3f5f1; --surface:#ffffff; --ink:#1d2a24; --muted:#66756d; --line:#dfe5df;
+  --accent:#1f7a52; --accent-ink:#ffffff; --accent-soft:#e2f0e8; --warn:#b5462f; --pending:#c48a14;
+  --font-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --font-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#121815; --surface:#1b231f; --ink:#e7eee9; --muted:#93a39a; --line:#2a3530;
+  --accent:#4cc08a; --accent-ink:#0d1a13; --accent-soft:#1f3329; --warn:#e88a73; --pending:#e0b04a; color-scheme:dark}}
+
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.4;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+.wrap{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:0 calc(110px + env(safe-area-inset-bottom,0px))}
+button{font-family:var(--font-body)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 10px;display:grid;gap:10px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+h1{font-family:var(--font-display);font-weight:800;font-size:1.75rem;letter-spacing:-.02em;margin:0;line-height:1}
+.status{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted);white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.ok{background:var(--accent)} .dot.pending{background:var(--pending)} .dot.err{background:var(--warn)}
+.icon-btn{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0}
+
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--line);border-radius:12px;padding:3px;gap:3px}
+.tab{border:0;border-radius:9px;padding:9px;font-weight:600;font-size:.92rem;background:transparent;color:var(--muted);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tab .n{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:500;margin-left:4px}
+
+/* bottom add bar — thumb reach */
+.addbar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--bg);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+.addbar-in{max-width:560px;margin:0 auto;display:grid;gap:8px}
+form.add{display:flex;gap:8px}
+.add input{flex:1;min-width:0;font:inherit;font-size:1rem;padding:13px 16px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+.add input:focus{outline:none;border-color:var(--accent)}
+.add button{font-weight:700;font-size:1.4rem;width:52px;border:0;border-radius:14px;background:var(--accent);color:var(--accent-ink);cursor:pointer;line-height:1}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font-weight:500;font-size:.86rem;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.chip b{color:var(--accent);font-weight:700;margin-right:3px}
+
+section.aisle{margin-top:16px}
+.aisle h2,.sec-h{font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:0 4px 8px;display:flex;gap:8px;align-items:center}
+ul{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+li{display:flex;align-items:center;gap:12px;padding:10px 8px 10px 12px;border-top:1px solid var(--line);min-height:58px}
+li:first-child{border-top:0}
+.tick{flex:none;width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:transparent;cursor:pointer;display:grid;place-items:center;color:var(--accent-ink);padding:0}
+.tick svg{opacity:0}
+li.done .tick{background:var(--accent);border-color:var(--accent)}
+li.done .tick svg{opacity:1}
+.body{flex:1;min-width:0;cursor:pointer;padding-block:6px}
+.name{font-weight:500;overflow-wrap:anywhere}
+.name .q{font-weight:700;color:var(--accent);margin-right:6px;font-variant-numeric:tabular-nums}
+li.done .name{text-decoration:line-through;color:var(--muted)}
+li.done .name .q{color:var(--muted)}
+.meta{font-size:.75rem;color:var(--muted)}
+.qty{flex:none;display:flex;align-items:center;gap:4px}
+.qty button{width:34px;height:34px;border:0;border-radius:10px;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:1.15rem;cursor:pointer}
+.del{flex:none;width:34px;height:34px;border:0;background:transparent;color:var(--muted);cursor:pointer;border-radius:10px;font-size:1.3rem}
+.del:hover{color:var(--warn)}
+.edit-input{font:inherit;width:100%;padding:6px 8px;border:1.5px solid var(--accent);border-radius:8px;background:var(--surface);color:var(--ink)}
+
+/* shopping mode: big rows, tap anywhere to tick */
+body.shop li{min-height:66px}
+body.shop .qty,body.shop li:not(.done) .del{display:none}
+body.shop .name{font-size:1.08rem}
+.mode{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--accent-soft)}
+.mode p{margin:0;font-size:.86rem}
+.mode strong{display:block;font-size:.95rem}
+.switch{flex:none;width:52px;height:30px;border-radius:999px;border:0;background:var(--line);position:relative;cursor:pointer;padding:0}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .15s}
+.switch[aria-checked="true"]{background:var(--accent)}
+.switch[aria-checked="true"]::after{left:25px}
+
+.tray{margin-top:24px}
+.tray-head{display:flex;justify-content:space-between;align-items:center;margin:0 4px 8px;gap:8px;flex-wrap:wrap}
+.tray-head h2{margin:0}
+.btn{font-weight:600;font-size:.88rem;border-radius:10px;border:0;padding:9px 14px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:var(--line);color:var(--ink)}
+.btn.danger{background:var(--warn);color:var(--surface)}
+.confirm{display:flex;gap:8px;align-items:center;font-size:.85rem;flex-wrap:wrap}
+
+.search{width:100%;font:inherit;padding:11px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);margin-top:14px}
+.sortrow{display:flex;gap:8px;margin:10px 0 2px}
+.sortrow .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.h-add{flex:none;font-weight:600;font-size:.85rem;border-radius:10px;border:0;padding:8px 12px;cursor:pointer;background:var(--accent-soft);color:var(--accent)}
+.h-add.on{background:transparent;color:var(--muted);cursor:default}
+
+.empty{text-align:center;padding:40px 16px;color:var(--muted)}
+.empty strong{display:block;font-family:var(--font-display);font-size:1.3rem;color:var(--ink);margin-bottom:6px}
+.notice{margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--accent-soft);font-size:.86rem}
+.notice.err{background:color-mix(in srgb,var(--warn) 15%,var(--surface))}
+
+/* setup / settings sheet */
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center}
+.sheet-in{background:var(--surface);width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px));max-height:90vh;overflow:auto;display:grid;gap:14px}
+.sheet h3{font-family:var(--font-display);font-size:1.3rem;margin:0}
+.sheet label{display:grid;gap:6px;font-size:.85rem;font-weight:600}
+.sheet input{font:inherit;font-weight:400;padding:11px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.sheet ol{margin:0;padding-left:20px;font-size:.88rem;display:grid;gap:6px}
+.sheet code{font-size:.82rem;background:var(--bg);padding:1px 5px;border-radius:5px;overflow-wrap:anywhere}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.small{font-size:.8rem;color:var(--muted)}
+.login{text-align:center;padding:48px 8px;display:grid;gap:14px;justify-items:center}
+.login p{margin:0;color:var(--muted);max-width:34ch}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="top">
+      <h1>La compra</h1>
+      <div class="row" style="align-items:center;gap:10px">
+        <span class="status"><span class="dot" id="dot"></span><span id="statusTxt">…</span></span>
+        <button class="icon-btn" id="settingsBtn" aria-label="Configuració">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="tabs" role="tablist" id="tabs">
+      <button class="tab" role="tab" id="tabList" aria-selected="true">Llista<span class="n" id="nList"></span></button>
+      <button class="tab" role="tab" id="tabHist" aria-selected="false">Historial<span class="n" id="nHist"></span></button>
+    </div>
+  </header>
+
+  <main id="viewList">
+    <div class="mode" id="modeBox" hidden>
+      <p><strong>Mode súper</strong>Toca un producte per ratllar-lo.</p>
+      <button class="switch" id="shopSwitch" role="switch" aria-checked="false" aria-label="Mode súper"></button>
+    </div>
+    <div id="list"></div>
+    <div class="empty" id="emptyList" hidden><strong>No falta res</strong>Escriu a baix què cal comprar, o recupera productes des de l'Historial.</div>
+  </main>
+
+  <main id="viewHist" hidden>
+    <input class="search" id="histSearch" type="search" placeholder="Busca a l'historial…" autocomplete="off">
+    <div class="sortrow">
+      <button class="chip" id="sortRecent" aria-pressed="true">Recents</button>
+      <button class="chip" id="sortFreq" aria-pressed="false">Més comprats</button>
+      <button class="chip" id="sortAz" aria-pressed="false">A–Z</button>
+    </div>
+    <div id="hist"></div>
+    <div class="empty" id="emptyHist" hidden><strong>Encara no hi ha historial</strong>Quan ratllis productes a la llista, apareixeran aquí per tornar-los a afegir amb un toc.</div>
+  </main>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <div class="login" id="loginBox" hidden>
+    <strong style="font-family:var(--font-display);font-size:1.4rem">Connecta el Dropbox</strong>
+    <p>La llista es desa en un fitxer del teu Dropbox perquè la pugueu compartir.</p>
+    <button class="btn primary" id="loginBtn">Connecta amb Dropbox</button>
+  </div>
+</div>
+
+<div class="addbar" id="addbar">
+  <div class="addbar-in">
+    <div class="chips" id="chips"></div>
+    <form class="add" id="addForm" autocomplete="off">
+      <input id="newItem" placeholder="Afegeix… (ex: 2 llet)" enterkeyhint="done" aria-label="Producte nou" autocapitalize="sentences">
+      <button type="submit" aria-label="Afegir">+</button>
+    </form>
+  </div>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-in">
+    <h3>Configuració</h3>
+    <div id="setupHelp">
+      <ol>
+        <li>Ves a <code>dropbox.com/developers/apps</code> → <b>Create app</b> → <b>Scoped access</b> → <b>Full Dropbox</b>.</li>
+        <li>A <b>Permissions</b> marca <code>files.content.read</code> i <code>files.content.write</code> i desa.</li>
+        <li>A <b>Settings → OAuth 2 → Redirect URIs</b> afegeix: <code id="redirUri"></code></li>
+        <li>Copia la <b>App key</b> aquí sota.</li>
+      </ol>
+    </div>
+    <label>App key de Dropbox<input id="cfgKey" autocomplete="off" spellcheck="false"></label>
+    <label>Fitxer de la llista<input id="cfgPath" autocomplete="off" spellcheck="false"></label>
+    <p class="small">L'app crea l'Excel sola el primer cop que afegeixis un producte. Per compartir-la: comparteix la carpeta <code>Llista_compra</code> des de Dropbox amb permís d'edició. A l'altra persona li apareixerà a l'arrel del seu Dropbox, així que ella haurà de posar aquí <code>/Llista_compra/llista_compra.xlsx</code>.</p>
+    <div class="row">
+      <button class="btn primary" id="cfgSave">Desa</button>
+      <button class="btn ghost" id="cfgClose">Tanca</button>
+      <button class="btn danger" id="cfgLogout" hidden>Desconnecta</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- categories ---------- */
+const AISLES=[
+  ["fruita","Fruita i verdura",["poma","pomes","plàtan","plàtans","platan","taronja","taronges","llimona","llimones","pera","peres","maduixa","maduixes","raïm","meló","síndria","kiwi","kiwis","enciam","tomàquet","tomàquets","tomaquet","tomate","ceba","cebes","all","alls","pastanaga","pastanagues","patata","patates","pebrot","pebrots","carbassó","albergínia","bròquil","espinacs","cogombre","alvocat","alvocats","fruita","verdura","mandarina","mandarines","préssec","bolets","xampinyons","julivert","api","porro","porros","coliflor","carbassa","mongeta tendra"]],
+  ["carn","Carn i peix",["pollastre","pit de pollastre","carn","vedella","porc","xai","carn picada","hamburgueses","hamburguesa","botifarra","salsitxes","pernil","pernil dolç","fuet","embotit","peix","salmó","lluç","bacallà","gambes","calamars","musclos","sardines","llom","conill","gall dindi"]],
+  ["lactics","Làctics i ous",["llet","leche","iogurt","iogurts","yogur","formatge","formatge ratllat","queso","mantega","nata","ous","ou","huevos","mató","kefir","natilles","flam"]],
+  ["forn","Forn",["pa","barra","barra de pa","pan","croissants","croissant","biscotes","magdalenes","pa de motlle","torrades","pa integral"]],
+  ["rebost","Rebost",["arròs","arroz","pasta","macarrons","espaguetis","fideus","farina","sucre","sal","oli","oli d'oliva","vinagre","cafè","te","cereals","cigrons","llenties","mongetes","tomàquet fregit","tonyina","conserves","xocolata","mel","melmelada","galetes","fruits secs","ametlles","nous","pebre","olives","patates fregides","cacau","llevat"]],
+  ["begudes","Begudes",["aigua","agua","vi","cervesa","cerveses","suc","refresc","refrescos","cola","cava","tònica","llet de civada","beguda de civada"]],
+  ["congelats","Congelats",["gelat","gelats","congelat","congelats","pizza","pizzes","pèsols","croquetes","glaçons"]],
+  ["neteja","Neteja i casa",["detergent","sabó","lleixiu","paper de vàter","paper higiènic","tovallons","esponja","esponges","bosses","bosses d'escombraries","suavitzant","rentaplats","fregall","paper de cuina","paper d'alumini","film","fregasuelos","netejavidres","piles"]],
+  ["higiene","Higiene",["xampú","gel","gel de dutxa","pasta de dents","raspall","desodorant","compreses","tampons","bolquers","crema","maquinetes","cotó","bastonets","colònia"]],
+  ["altres","Altres",[]]
+];
+const AISLE_IDX=Object.fromEntries(AISLES.map((a,i)=>[a[0],i]));
+const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+function guessAisle(name){
+  const n=" "+name.toLowerCase()+" ";let best="altres",len=0;
+  for(const [id,,words] of AISLES)for(const w of words){
+    if(w.length>len&&new RegExp("[\\s,]"+esc(w)+"[\\s,]").test(n)){best=id;len=w.length}
+  }
+  return best;
+}
+function parseInput(raw){
+  const m=raw.trim().match(/^(\d{1,3})\s*(?:x\s*)?(.+)$/i);
+  return m?{qty:Math.max(1,parseInt(m[1],10)),name:m[2].trim()}:{qty:1,name:raw.trim()};
+}
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
+const key=s=>s.trim().toLowerCase();
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const $=id=>document.getElementById(id);
+
+/* ---------- local storage (per device) ---------- */
+const LS={
+  get(k,d){try{const v=localStorage.getItem("lc_"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem("lc_"+k,JSON.stringify(v))}catch(e){}},
+  del(k){try{localStorage.removeItem("lc_"+k)}catch(e){}}
+};
+const cfg={key:LS.get("appkey",CONFIG.DROPBOX_APP_KEY)||CONFIG.DROPBOX_APP_KEY,path:LS.get("path",CONFIG.FILE_PATH)||CONFIG.FILE_PATH};
+
+/* ---------- state: {items:[{id,name,qty,cat,done,u,del?}], history:{key:{name,cat,count,last,u,del?}}} ---------- */
+let state=LS.get("state",{items:[],history:{}});
+let rev=LS.get("rev",null);
+let dirty=LS.get("dirty",false);
+let ui={tab:"list",shop:LS.get("shop",false),sort:"recent",q:"",editing:null,confirm:false};
+
+function persist(){LS.set("state",state);LS.set("rev",rev);LS.set("dirty",dirty)}
+function change(){dirty=true;persist();render();scheduleSave()}
+
+function merge(a,b){
+  const items=new Map();
+  for(const it of [...(a.items||[]),...(b.items||[])]){
+    const cur=items.get(it.id);if(!cur||(it.u||0)>(cur.u||0))items.set(it.id,it);
+  }
+  const history={...(a.history||{})};
+  for(const [k,h] of Object.entries(b.history||{})){
+    const cur=history[k];
+    if(!cur||(h.u||0)>(cur.u||0))history[k]={...h,count:Math.max(h.count||0,cur?.count||0)};
+  }
+  return {items:[...items.values()],history};
+}
+function prune(s){
+  const cutoff=Date.now()-30*864e5;
+  return {items:s.items.filter(i=>!i.del||i.u>cutoff),history:Object.fromEntries(Object.entries(s.history).filter(([,h])=>!h.del||h.u>cutoff))};
+}
+const live=()=>state.items.filter(i=>!i.del);
+const liveHist=()=>Object.entries(state.history).filter(([,h])=>!h.del);
+
+/* ---------- actions ---------- */
+function bumpHistory(it){
+  const k=key(it.name),h=state.history[k];
+  state.history[k]={name:it.name,cat:it.cat,count:(h&&!h.del?h.count:0)+1,last:Date.now(),u:Date.now()};
+}
+function addItem(raw,qtyOverride){
+  const {qty,name}=parseInput(raw);if(!name)return;
+  const q=qtyOverride||qty,k=key(name),now=Date.now();
+  const ex=live().find(i=>key(i.name)===k);
+  if(ex){
+    if(ex.done){ex.done=false;ex.qty=q}else ex.qty+=q;
+    ex.u=now;
+  }else{
+    const h=state.history[k];
+    state.items.push({id:uid(),name:h&&!h.del?h.name:cap(name),qty:q,cat:h&&!h.del?h.cat:guessAisle(name),done:false,u:now});
+  }
+  change();
+}
+function patch(id,p){const it=state.items.find(i=>i.id===id);if(!it)return;Object.assign(it,p,{u:Date.now()});return it}
+function toggle(id){
+  const it=state.items.find(i=>i.id===id);if(!it)return;
+  patch(id,{done:!it.done});if(it.done)bumpHistory(it);change();
+}
+function removeItem(id){patch(id,{del:true});change()}
+function finishShop(){
+  live().filter(i=>i.done).forEach(i=>patch(i.id,{del:true}));
+  ui.confirm=false;change();
+}
+function removeHist(k){const h=state.history[k];if(h){h.del=true;h.u=Date.now();change()}}
+
+/* ---------- render ---------- */
+const TICK='<svg width="15" height="15" viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5l3 3 6-7" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+
+function render(){
+  document.body.classList.toggle("shop",ui.shop);
+  $("shopSwitch").setAttribute("aria-checked",ui.shop);
+  const items=live(),pending=items.filter(i=>!i.done),done=items.filter(i=>i.done);
+  $("nList").textContent=pending.length||"";
+  $("nHist").textContent=liveHist().length||"";
+  $("tabList").setAttribute("aria-selected",ui.tab==="list");
+  $("tabHist").setAttribute("aria-selected",ui.tab==="hist");
+  $("viewList").hidden=ui.tab!=="list";$("viewHist").hidden=ui.tab!=="hist";
+  ui.tab==="list"?renderList(pending,done):renderHist(pending);
+  renderChips(pending);
+}
+
+function renderList(pending,done){
+  const box=$("list");box.innerHTML="";
+  $("emptyList").hidden=pending.length+done.length>0;
+  $("modeBox").hidden=pending.length+done.length===0;
+  const groups=[...AISLES.keys()].map(()=>[]);
+  pending.forEach(i=>groups[AISLE_IDX[i.cat]??AISLE_IDX.altres].push(i));
+  groups.forEach((rows,gi)=>{
+    if(!rows.length)return;
+    rows.sort((a,b)=>a.name.localeCompare(b.name,"ca"));
+    const s=el("section","aisle");s.append(el("h2",null,AISLES[gi][1]));
+    const ul=el("ul");rows.forEach(r=>ul.append(itemRow(r)));s.append(ul);box.append(s);
+  });
+  if(done.length){
+    const s=el("section","aisle tray"),head=el("div","tray-head");
+    head.append(el("h2",null,`Al cistell · ${done.length}`));
+    if(ui.confirm){
+      const c=el("div","confirm");c.append(el("span",null,"Treure els ratllats?"));
+      const y=el("button","btn danger","Sí");y.onclick=finishShop;
+      const n=el("button","btn ghost","No");n.onclick=()=>{ui.confirm=false;render()};
+      c.append(y,n);head.append(c);
+    }else{
+      const b=el("button","btn primary","Compra feta");b.onclick=()=>{ui.confirm=true;render()};head.append(b);
+    }
+    const ul=el("ul");done.sort((a,b)=>b.u-a.u).forEach(r=>ul.append(itemRow(r)));
+    s.append(head,ul);box.append(s);
+  }
+}
+
+function itemRow(it){
+  const li=el("li");if(it.done)li.classList.add("done");
+  const t=el("button","tick");t.innerHTML=TICK;t.setAttribute("aria-label",it.done?"Desmarcar "+it.name:"Ratllar "+it.name);
+  t.onclick=e=>{e.stopPropagation();toggle(it.id)};
+  const b=el("div","body");
+  if(ui.editing===it.id){
+    const inp=el("input","edit-input");inp.id="edit-"+it.id;inp.value=it.name;
+    let saved=false;
+    const save=()=>{if(saved)return;saved=true;const v=inp.value.trim();ui.editing=null;
+      if(v&&v!==it.name){patch(it.id,{name:cap(v),cat:guessAisle(v)});change()}else render()};
+    inp.onkeydown=e=>{if(e.key==="Enter")inp.blur();if(e.key==="Escape"){saved=true;ui.editing=null;render()}};
+    inp.onblur=save;b.append(inp);setTimeout(()=>{inp.focus();inp.select()},0);
+  }else{
+    const n=el("div","name");
+    if(it.qty>1)n.append(el("span","q",it.qty+"×"));
+    n.append(it.name);b.append(n);
+    b.onclick=()=>{
+      if(ui.shop||it.done){toggle(it.id);return}
+      ui.editing=it.id;render();
+    };
+  }
+  li.append(t,b);
+  if(!it.done){
+    const q=el("div","qty");
+    const m=el("button",null,"−");m.setAttribute("aria-label","Menys");m.onclick=()=>{if(it.qty>1){patch(it.id,{qty:it.qty-1});change()}};
+    const p=el("button",null,"+");p.setAttribute("aria-label","Més");p.onclick=()=>{patch(it.id,{qty:it.qty+1});change()};
+    q.append(m,p);li.append(q);
+  }
+  const d=el("button","del","×");d.setAttribute("aria-label","Eliminar "+it.name);d.onclick=()=>removeItem(it.id);li.append(d);
+  if(ui.shop&&!it.done)li.onclick=e=>{if(e.target===li)toggle(it.id)};
+  return li;
+}
+
+function renderHist(pending){
+  const box=$("hist");box.innerHTML="";
+  const onList=new Set(pending.map(i=>key(i.name)));
+  let rows=liveHist();
+  $("emptyHist").hidden=rows.length>0;
+  const q=key(ui.q);
+  if(q)rows=rows.filter(([k])=>k.includes(q));
+  const cmp={recent:(a,b)=>b[1].last-a[1].last,freq:(a,b)=>b[1].count-a[1].count||b[1].last-a[1].last,az:(a,b)=>a[1].name.localeCompare(b[1].name,"ca")}[ui.sort];
+  rows.sort(cmp);
+  ["sortRecent","sortFreq","sortAz"].forEach((id,i)=>$(id).setAttribute("aria-pressed",["recent","freq","az"][i]===ui.sort));
+  if(!rows.length&&q){box.append(el("div","empty","Cap coincidència."));return}
+  const ul=el("ul");
+  for(const [k,h] of rows){
+    const li=el("li"),b=el("div","body");
+    b.append(el("div","name",h.name));
+    b.append(el("div","meta",`${AISLES[AISLE_IDX[h.cat]??AISLE_IDX.altres][1]} · ${h.count} ${h.count===1?"cop":"cops"} · ${ago(h.last)}`));
+    b.style.cursor="default";
+    const inList=onList.has(k);
+    const a=el("button","h-add"+(inList?" on":""),inList?"A la llista":"+ Afegir");
+    if(!inList)a.onclick=()=>addItem(h.name);
+    const d=el("button","del","×");d.setAttribute("aria-label","Treure de l'historial "+h.name);d.onclick=()=>removeHist(k);
+    li.append(b,a,d);ul.append(li);
+  }
+  box.append(ul);
+}
+function ago(t){
+  const d=Math.floor((Date.now()-t)/864e5);
+  if(d<1)return"avui";if(d===1)return"ahir";if(d<7)return`fa ${d} dies`;if(d<30){const w=Math.round(d/7);return`fa ${w} ${w===1?"setmana":"setmanes"}`}
+  const m=Math.round(d/30);return`fa ${m} ${m===1?"mes":"mesos"}`;
+}
+
+function renderChips(pending){
+  const box=$("chips");box.innerHTML="";
+  const onList=new Set(pending.map(i=>key(i.name)));
+  const typed=key(parseInput($("newItem").value).name||"");
+  let rows=liveHist().filter(([k])=>!onList.has(k));
+  if(typed)rows=rows.filter(([k])=>k.includes(typed)&&k!==typed).sort((a,b)=>(a[0].startsWith(typed)?0:1)-(b[0].startsWith(typed)?0:1)||b[1].count-a[1].count);
+  else rows.sort((a,b)=>b[1].count-a[1].count||b[1].last-a[1].last);
+  rows=rows.slice(0,10);
+  box.hidden=!rows.length;
+  for(const [,h] of rows){
+    const c=el("button","chip");c.type="button";c.innerHTML="<b>+</b>";c.append(h.name);
+    c.onclick=()=>{const {qty}=parseInput($("newItem").value);addItem(h.name,typed?qty:1);$("newItem").value="";renderChips(live().filter(i=>!i.done))};
+    box.append(c);
+  }
+}
+
+/* ---------- status ---------- */
+function status(kind,txt){$("dot").className="dot "+(kind||"");$("statusTxt").textContent=txt}
+function notice(msg,err){const n=$("notice");n.textContent=msg||"";n.hidden=!msg;n.classList.toggle("err",!!err)}
+
+/* ---------- Dropbox OAuth (PKCE, sense secret) ---------- */
+const redirectUri=()=>location.origin+location.pathname;
+let tok=LS.get("tok",null); // {access, refresh, exp}
+
+function b64url(buf){return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
+async function login(){
+  const verifier=b64url(crypto.getRandomValues(new Uint8Array(48)));
+  const challenge=b64url(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(verifier)));
+  LS.set("verifier",verifier);
+  const p=new URLSearchParams({client_id:cfg.key,response_type:"code",code_challenge:challenge,code_challenge_method:"S256",redirect_uri:redirectUri(),token_access_type:"offline"});
+  location.href="https://www.dropbox.com/oauth2/authorize?"+p;
+}
+async function handleRedirect(){
+  const p=new URLSearchParams(location.search);
+  const code=p.get("code");if(!code)return;
+  history.replaceState(null,"",redirectUri());
+  const r=await fetch("https://api.dropboxapi.com/oauth2/token",{method:"POST",body:new URLSearchParams({code,grant_type:"authorization_code",code_verifier:LS.get("verifier",""),client_id:cfg.key,redirect_uri:redirectUri()})});
+  if(!r.ok){notice("No s'ha pogut connectar amb Dropbox. Revisa la App key i la Redirect URI a la configuració.",true);return}
+  const j=await r.json();
+  tok={access:j.access_token,refresh:j.refresh_token,exp:Date.now()+(j.expires_in-60)*1000};LS.set("tok",tok);LS.del("verifier");
+}
+async function accessToken(force){
+  if(!tok)throw{auth:true};
+  if(!force&&tok.exp>Date.now())return tok.access;
+  const r=await fetch("https://api.dropboxapi.com/oauth2/token",{method:"POST",body:new URLSearchParams({grant_type:"refresh_token",refresh_token:tok.refresh,client_id:cfg.key})});
+  if(!r.ok){if(r.status===400||r.status===401){tok=null;LS.del("tok")}throw{auth:r.status<500}}
+  const j=await r.json();tok.access=j.access_token;tok.exp=Date.now()+(j.expires_in-60)*1000;LS.set("tok",tok);return tok.access;
+}
+async function dbx(url,opts,retry=true){
+  const t=await accessToken();
+  const r=await fetch(url,{...opts,headers:{...(opts.headers||{}),Authorization:"Bearer "+t}});
+  if(r.status===401&&retry){await accessToken(true);return dbx(url,opts,false)}
+  return r;
+}
+/* Dropbox-API-Arg ha de ser ASCII */
+const apiArg=o=>JSON.stringify(o).replace(/[\u007f-￿]/g,c=>"\\u"+c.charCodeAt(0).toString(16).padStart(4,"0"));
+
+async function remoteRev(){
+  const r=await dbx("https://api.dropboxapi.com/2/files/get_metadata",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({path:cfg.path})});
+  if(r.status===409){const j=await r.json().catch(()=>({}));if(String(j.error_summary).includes("not_found"))return null;throw{api:j.error_summary}}
+  if(!r.ok)throw{http:r.status};
+  return (await r.json()).rev;
+}
+/* ---------- Excel <-> estat ----------
+   Fulla "Llista":    Producte | Quantitat | Passadís | Comprat | (id) | (actualitzat)
+   Fulla "Historial": Producte | Passadís | Vegades | Última compra | (clau) | (actualitzat)
+   Fulla "_sync" (oculta): esborrats pendents, per poder fusionar canvis entre mòbils */
+const AISLE_BY_LABEL=Object.fromEntries(AISLES.map(a=>[a[1].toLowerCase(),a[0]]));
+const toAisle=v=>{const s=String(v||"").trim().toLowerCase();return AISLE_IDX[s]!=null?s:(AISLE_BY_LABEL[s]||guessAisle(s))};
+const label=id=>AISLES[AISLE_IDX[id]??AISLE_IDX.altres][1];
+const yes=v=>/^(s[ií]|si|x|1|true|yes|✓)$/i.test(String(v??"").trim());
+let fixedOnRead=false;
+
+function fromWorkbook(wb){
+  fixedOnRead=false;
+  const rows=n=>wb.Sheets[n]?XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:""}):[];
+  const now=Date.now(),items=[],history={};
+  for(const r of rows("Llista")){
+    const name=String(r["Producte"]||"").trim();if(!name)continue;
+    let id=String(r["id"]||"").trim(),u=Number(r["actualitzat"])||0;
+    if(!id){id=uid();u=now;fixedOnRead=true}
+    const cat=r["Passadís"]?toAisle(r["Passadís"]):guessAisle(name);
+    items.push({id,name,qty:Math.max(1,parseInt(r["Quantitat"],10)||1),cat,done:yes(r["Comprat"]),u});
+  }
+  for(const r of rows("Historial")){
+    const name=String(r["Producte"]||"").trim();if(!name)continue;
+    const k=String(r["clau"]||"").trim()||key(name);
+    let u=Number(r["actualitzat"])||0;if(!r["clau"]){u=now;fixedOnRead=true}
+    const lc=r["Última compra"];const last=lc instanceof Date?lc.getTime():(Date.parse(lc)||u||now);
+    history[k]={name,cat:r["Passadís"]?toAisle(r["Passadís"]):guessAisle(name),count:parseInt(r["Vegades"],10)||1,last,u};
+  }
+  for(const r of rows("_sync")){
+    const u=Number(r.u)||0;
+    if(r.tipus==="item")items.push({id:String(r.id),name:"",qty:1,cat:"altres",done:false,u,del:true});
+    if(r.tipus==="hist")history[String(r.id)]={name:"",cat:"altres",count:0,last:0,u,del:true};
+  }
+  return {items,history};
+}
+function toWorkbook(s){
+  const wb=XLSX.utils.book_new();
+  const live=s.items.filter(i=>!i.del).sort((a,b)=>(AISLE_IDX[a.cat]-AISLE_IDX[b.cat])||a.name.localeCompare(b.name,"ca"));
+  const ws1=XLSX.utils.json_to_sheet(live.map(i=>({"Producte":i.name,"Quantitat":i.qty,"Passadís":label(i.cat),"Comprat":i.done?"Sí":"No","id":i.id,"actualitzat":i.u})),{header:["Producte","Quantitat","Passadís","Comprat","id","actualitzat"]});
+  ws1["!cols"]=[{wch:28},{wch:10},{wch:18},{wch:9},{hidden:true},{hidden:true}];
+  const hist=Object.entries(s.history).filter(([,h])=>!h.del).sort((a,b)=>b[1].count-a[1].count);
+  const ws2=XLSX.utils.json_to_sheet(hist.map(([k,h])=>({"Producte":h.name,"Passadís":label(h.cat),"Vegades":h.count,"Última compra":new Date(h.last),"clau":k,"actualitzat":h.u})),{header:["Producte","Passadís","Vegades","Última compra","clau","actualitzat"],cellDates:true,dateNF:"dd/mm/yyyy"});
+  ws2["!cols"]=[{wch:28},{wch:18},{wch:9},{wch:14},{hidden:true},{hidden:true}];
+  const tomb=[...s.items.filter(i=>i.del).map(i=>({tipus:"item",id:i.id,u:i.u})),...Object.entries(s.history).filter(([,h])=>h.del).map(([k,h])=>({tipus:"hist",id:k,u:h.u}))];
+  const ws3=XLSX.utils.json_to_sheet(tomb,{header:["tipus","id","u"]});
+  XLSX.utils.book_append_sheet(wb,ws1,"Llista");
+  XLSX.utils.book_append_sheet(wb,ws2,"Historial");
+  XLSX.utils.book_append_sheet(wb,ws3,"_sync");
+  wb.Workbook={Sheets:[{Hidden:0},{Hidden:0},{Hidden:1}]};
+  return XLSX.write(wb,{type:"array",bookType:"xlsx",cellDates:true});
+}
+
+async function download(){
+  const r=await dbx("https://content.dropboxapi.com/2/files/download",{method:"POST",headers:{"Dropbox-API-Arg":apiArg({path:cfg.path})}});
+  if(!r.ok)throw{http:r.status};
+  const buf=await r.arrayBuffer();
+  try{return fromWorkbook(XLSX.read(buf,{type:"array",cellDates:true}))}
+  catch(e){throw{bad:true}}
+}
+async function upload(data,baseRev){
+  const mode=baseRev?{".tag":"update",update:baseRev}:{".tag":"add"};
+  const r=await dbx("https://content.dropboxapi.com/2/files/upload",{method:"POST",headers:{"Content-Type":"application/octet-stream","Dropbox-API-Arg":apiArg({path:cfg.path,mode,autorename:false,mute:true})},body:toWorkbook(data)});
+  if(r.status===409)return null; // conflicte
+  if(!r.ok)throw{http:r.status};
+  return (await r.json()).rev;
+}
+
+/* ---------- sincronització ---------- */
+let syncing=false,again=false,saveTimer=null;
+function scheduleSave(){status("pending","Desant…");clearTimeout(saveTimer);saveTimer=setTimeout(sync,700)}
+async function sync(){
+  if(!tok||!cfg.key)return;
+  if(syncing){again=true;return}
+  syncing=true;
+  try{
+    for(let attempt=0;attempt<4;attempt++){
+      const rr=await remoteRev();
+      if(rr&&rr!==rev){
+        const remote=await download();
+        // sense canvis locals: el fitxer mana (així també valen els canvis fets a mà a l'Excel)
+        state=dirty?merge(state,remote):remote;
+        rev=rr;
+        if(fixedOnRead)dirty=true; // files afegides a mà a l'Excel: se'ls hi posa id i es desa
+        if(!dirty){persist();break}
+      }else if(!dirty){break}
+      const wasDirtyAt=JSON.stringify(state);
+      const newRev=await upload(prune(state),rr);
+      if(newRev){rev=newRev;if(JSON.stringify(state)===wasDirtyAt)dirty=false;persist();if(!dirty)break}
+    }
+    persist();
+    status(dirty?"pending":"ok",dirty?"Pendent":"Sincronitzat");notice("");
+    if(ui.editing==null)render();
+  }catch(e){
+    if(e&&e.auth){status("err","Desconnectat");showLogin()}
+    else if(e&&e.bad){status("err","Fitxer il·legible");notice("No s'ha pogut llegir l'Excel de Dropbox. Comprova que és un .xlsx i que té les fulles Llista i Historial.",true)}
+    else{status(dirty?"pending":"err",navigator.onLine?"Error":"Sense connexió");
+      if(navigator.onLine)notice("No s'ha pogut sincronitzar amb Dropbox. Es tornarà a provar sol.",true)}
+  }finally{
+    syncing=false;
+    if(again){again=false;setTimeout(sync,200)}
+  }
+}
+
+/* ---------- configuració / login ---------- */
+function showLogin(){
+  const need=!cfg.key;
+  $("loginBox").hidden=!!tok&&!need;
+  $("viewList").hidden=$("viewHist").hidden=!tok?true:$("viewList").hidden;
+  if(!tok){$("viewList").hidden=true;$("viewHist").hidden=true;$("addbar").hidden=true;$("tabs").hidden=true}
+  if(need)openSheet();
+}
+function openSheet(){
+  $("redirUri").textContent=redirectUri();
+  $("cfgKey").value=cfg.key;$("cfgPath").value=cfg.path;
+  $("cfgLogout").hidden=!tok;$("sheet").hidden=false;
+}
+$("settingsBtn").onclick=openSheet;
+$("cfgClose").onclick=()=>{$("sheet").hidden=true};
+$("sheet").onclick=e=>{if(e.target.id==="sheet")$("sheet").hidden=true};
+$("cfgSave").onclick=()=>{
+  const k=$("cfgKey").value.trim(),p=$("cfgPath").value.trim()||CONFIG.FILE_PATH;
+  const path=(p.startsWith("/")?p:"/"+p);
+  if(path!==cfg.path){rev=null;dirty=true}
+  cfg.key=k;cfg.path=path;LS.set("appkey",k);LS.set("path",path);persist();
+  $("sheet").hidden=true;
+  if(!k)return;
+  if(!tok)login();else sync();
+};
+$("cfgLogout").onclick=()=>{tok=null;LS.del("tok");$("sheet").hidden=true;location.reload()};
+$("loginBtn").onclick=()=>{if(!cfg.key)openSheet();else login()};
+
+/* ---------- events ---------- */
+$("addForm").addEventListener("submit",e=>{
+  e.preventDefault();const inp=$("newItem");
+  if(inp.value.trim()){addItem(inp.value);inp.value=""}
+  inp.focus();renderChips(live().filter(i=>!i.done));
+});
+$("newItem").addEventListener("input",()=>renderChips(live().filter(i=>!i.done)));
+$("tabList").onclick=()=>{ui.tab="list";render()};
+$("tabHist").onclick=()=>{ui.tab="hist";render()};
+$("shopSwitch").onclick=()=>{ui.shop=!ui.shop;LS.set("shop",ui.shop);render()};
+$("histSearch").addEventListener("input",e=>{ui.q=e.target.value;render()});
+$("sortRecent").onclick=()=>{ui.sort="recent";render()};
+$("sortFreq").onclick=()=>{ui.sort="freq";render()};
+$("sortAz").onclick=()=>{ui.sort="az";render()};
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)sync()});
+window.addEventListener("online",sync);
+setInterval(()=>{if(!document.hidden)sync()},8000);
+
+/* ---------- arrencada ---------- */
+(async()=>{
+  render();
+  status(dirty?"pending":"","…");
+  if(!cfg.key){showLogin();return}
+  await handleRedirect();
+  if(!tok){showLogin();return}
+  $("loginBox").hidden=true;
+  sync();
+})();
+</script>
+</body>
+</html>
