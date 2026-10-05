@@ -479,13 +479,27 @@ async function dbx(url,opts,retry=true){
   if(r.status===401&&retry){await accessToken(true);return dbx(url,opts,false)}
   return r;
 }
+async function failResp(r){
+  const t=await r.text().catch(()=>"");let msg=t;
+  try{const j=JSON.parse(t);msg=j.error_summary||j.error_description||(j.error&&(j.error[".tag"]||j.error))||t}catch(e){}
+  throw{http:r.status,msg:String(msg).slice(0,200)};
+}
+function explain(e){
+  const m=String(e&&(e.msg||e.message)||e||"");
+  if(/missing_scope|required_scope/.test(m))return "A l'app de Dropbox li falten permisos. A la consola de Dropbox, pestanya Permissions, marca files.content.read i files.content.write, prem Submit, i aquí: engranatge → Desconnecta → torna a connectar.";
+  if(/XLSX is not defined/.test(m))return "No s'ha pogut carregar la llibreria d'Excel. Comprova la connexió i recarrega la pàgina.";
+  if(/path\/malformed|malformed_path/.test(m))return "El camí del fitxer no és vàlid. Revisa'l a l'engranatge (ex: /VARIS/Llista_compra/llista_compra.xlsx).";
+  if(/no_write_permission|insufficient_space/.test(m))return "Dropbox no deixa escriure en aquesta carpeta ("+m+").";
+  if(/Failed to fetch|NetworkError|Load failed/i.test(m))return "No s'ha pogut contactar amb Dropbox. Revisa la connexió.";
+  return "Error de Dropbox"+(e&&e.http?" ("+e.http+")":"")+": "+(m||"desconegut");
+}
 /* Dropbox-API-Arg ha de ser ASCII */
 const apiArg=o=>JSON.stringify(o).replace(/[\u007f-￿]/g,c=>"\\u"+c.charCodeAt(0).toString(16).padStart(4,"0"));
 
 async function remoteRev(){
   const r=await dbx("https://api.dropboxapi.com/2/files/get_metadata",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({path:cfg.path})});
-  if(r.status===409){const j=await r.json().catch(()=>({}));if(String(j.error_summary).includes("not_found"))return null;throw{api:j.error_summary}}
-  if(!r.ok)throw{http:r.status};
+  if(r.status===409){const j=await r.json().catch(()=>({}));if(String(j.error_summary).includes("not_found"))return null;throw{http:409,msg:j.error_summary}}
+  if(!r.ok)await failResp(r);
   return (await r.json()).rev;
 }
 /* ---------- Excel <-> estat ----------
@@ -542,7 +556,7 @@ function toWorkbook(s){
 
 async function download(){
   const r=await dbx("https://content.dropboxapi.com/2/files/download",{method:"POST",headers:{"Dropbox-API-Arg":apiArg({path:cfg.path})}});
-  if(!r.ok)throw{http:r.status};
+  if(!r.ok)await failResp(r);
   const buf=await r.arrayBuffer();
   try{return fromWorkbook(XLSX.read(buf,{type:"array",cellDates:true}))}
   catch(e){throw{bad:true}}
@@ -550,8 +564,8 @@ async function download(){
 async function upload(data,baseRev){
   const mode=baseRev?{".tag":"update",update:baseRev}:{".tag":"add"};
   const r=await dbx("https://content.dropboxapi.com/2/files/upload",{method:"POST",headers:{"Content-Type":"application/octet-stream","Dropbox-API-Arg":apiArg({path:cfg.path,mode,autorename:false,mute:true})},body:toWorkbook(data)});
-  if(r.status===409)return null; // conflicte
-  if(!r.ok)throw{http:r.status};
+  if(r.status===409){const j=await r.clone().json().catch(()=>({}));if(String(j.error_summary).includes("conflict"))return null;await failResp(r)}
+  if(!r.ok)await failResp(r);
   return (await r.json()).rev;
 }
 
@@ -584,7 +598,7 @@ async function sync(){
     if(e&&e.auth){status("err","Desconnectat");showLogin()}
     else if(e&&e.bad){status("err","Fitxer il·legible");notice("No s'ha pogut llegir l'Excel de Dropbox. Comprova que és un .xlsx i que té les fulles Llista i Historial.",true)}
     else{status(dirty?"pending":"err",navigator.onLine?"Error":"Sense connexió");
-      if(navigator.onLine)notice("No s'ha pogut sincronitzar amb Dropbox. Es tornarà a provar sol.",true)}
+      if(navigator.onLine)notice(explain(e),true);console.error("sync",e)}
   }finally{
     syncing=false;
     if(again){again=false;setTimeout(sync,200)}
