@@ -254,15 +254,15 @@ form.add{display:flex;gap:8px;background:var(--surface);border-radius:20px;box-s
 <script>
 /* ---------- categories ---------- */
 const AISLES=[
-  ["fruita","Fruita i verdura",["poma","pomes","plàtan","plàtans","platan","taronja","taronges","llimona","llimones","pera","peres","maduixa","maduixes","raïm","meló","síndria","kiwi","kiwis","enciam","tomàquet","tomàquets","tomaquet","tomate","ceba","cebes","all","alls","pastanaga","pastanagues","patata","patates","pebrot","pebrots","carbassó","albergínia","bròquil","espinacs","cogombre","alvocat","alvocats","fruita","verdura","mandarina","mandarines","préssec","bolets","xampinyons","julivert","api","porro","porros","coliflor","carbassa","mongeta tendra"]],
-  ["carn","Carn i peix",["pollastre","pit de pollastre","carn","vedella","porc","xai","carn picada","hamburgueses","hamburguesa","botifarra","salsitxes","pernil","pernil dolç","fuet","embotit","peix","salmó","lluç","bacallà","gambes","calamars","musclos","sardines","llom","conill","gall dindi"]],
-  ["lactics","Làctics i ous",["llet","leche","iogurt","iogurts","yogur","formatge","formatge ratllat","queso","mantega","nata","ous","ou","huevos","mató","kefir","natilles","flam"]],
-  ["forn","Forn",["pa","barra","barra de pa","pan","croissants","croissant","biscotes","magdalenes","pa de motlle","torrades","pa integral"]],
-  ["rebost","Rebost",["arròs","arroz","pasta","macarrons","espaguetis","fideus","farina","sucre","sal","oli","oli d'oliva","vinagre","cafè","te","cereals","cigrons","llenties","mongetes","tomàquet fregit","tonyina","conserves","xocolata","mel","melmelada","galetes","fruits secs","ametlles","nous","pebre","olives","patates fregides","cacau","llevat"]],
-  ["begudes","Begudes",["aigua","agua","vi","cervesa","cerveses","suc","refresc","refrescos","cola","cava","tònica","llet de civada","beguda de civada"]],
-  ["congelats","Congelats",["gelat","gelats","congelat","congelats","pizza","pizzes","pèsols","croquetes","glaçons"]],
-  ["neteja","Neteja i casa",["detergent","sabó","lleixiu","paper de vàter","paper higiènic","tovallons","esponja","esponges","bosses","bosses d'escombraries","suavitzant","rentaplats","fregall","paper de cuina","paper d'alumini","film","fregasuelos","netejavidres","piles"]],
-  ["higiene","Higiene",["xampú","gel","gel de dutxa","pasta de dents","raspall","desodorant","compreses","tampons","bolquers","crema","maquinetes","cotó","bastonets","colònia"]],
+  ["fruita","Fruita i verdura",["maíz","maiz","tomates","tomate cherry","tomates cherry","cebolla","cebollas","limón","limon","limones","manzana","manzanas","plátano","plátanos","naranja","naranjas","lechuga","zanahoria","zanahorias","pimiento","calabacín","berenjena","pepino","aguacate","ajo","ajos","fresas","uvas","champiñones","perejil","poma","pomes","plàtan","plàtans","platan","taronja","taronges","llimona","llimones","pera","peres","maduixa","maduixes","raïm","meló","síndria","kiwi","kiwis","enciam","tomàquet","tomàquets","tomaquet","tomate","ceba","cebes","all","alls","pastanaga","pastanagues","patata","patates","pebrot","pebrots","carbassó","albergínia","bròquil","espinacs","cogombre","alvocat","alvocats","fruita","verdura","mandarina","mandarines","préssec","bolets","xampinyons","julivert","api","porro","porros","coliflor","carbassa","mongeta tendra"]],
+  ["carn","Carn i peix",["pollo","pechuga","ternera","cerdo","carne picada","jamón","jamón york","salchichas","pescado","salmón","merluza","atún","gambas","pavo","lomo","pollastre","pit de pollastre","carn","vedella","porc","xai","carn picada","hamburgueses","hamburguesa","botifarra","salsitxes","pernil","pernil dolç","fuet","embotit","peix","salmó","lluç","bacallà","gambes","calamars","musclos","sardines","llom","conill","gall dindi"]],
+  ["lactics","Làctics i ous",["huevos","leche","yogures","yogur","queso","queso rallado","mantequilla","nata","humus","hummus","llet","leche","iogurt","iogurts","yogur","formatge","formatge ratllat","queso","mantega","nata","ous","ou","huevos","mató","kefir","natilles","flam"]],
+  ["forn","Forn",["pan","pan de hamburguesa","pan de molde","picos","picatostes","tostadas","croissants","pa","barra","barra de pa","pan","croissants","croissant","biscotes","magdalenes","pa de motlle","torrades","pa integral"]],
+  ["rebost","Rebost",["arroz","pasta","macarrones","espaguetis","harina","azúcar","aceite","aceite de oliva","vinagre","vinagre balsámico","café","galletas","palomitas","cebolla crujiente","garbanzos","lentejas","tomate frito","chocolate","cereales","aceitunas","patatas fritas","frutos secos","especias","arròs","arroz","pasta","macarrons","espaguetis","fideus","farina","sucre","sal","oli","oli d'oliva","vinagre","cafè","te","cereals","cigrons","llenties","mongetes","tomàquet fregit","tonyina","conserves","xocolata","mel","melmelada","galetes","fruits secs","ametlles","nous","pebre","olives","patates fregides","cacau","llevat"]],
+  ["begudes","Begudes",["agua","aquarius","cerveza","vino","zumo","refresco","coca-cola","aigua","agua","vi","cervesa","cerveses","suc","refresc","refrescos","cola","cava","tònica","llet de civada","beguda de civada"]],
+  ["congelats","Congelats",["pizza","helado","helados","congelados","hielo","gelat","gelats","congelat","congelats","pizza","pizzes","pèsols","croquetes","glaçons"]],
+  ["neteja","Neteja i casa",["papel albal","papel de aluminio","papel higiénico","papel de cocina","líquido lavavajillas","lavavajillas","detergente","lejía","suavizante","bolsas de basura","estropajo","servilletas","detergent","sabó","lleixiu","paper de vàter","paper higiènic","tovallons","esponja","esponges","bosses","bosses d'escombraries","suavitzant","rentaplats","fregall","paper de cuina","paper d'alumini","film","fregasuelos","netejavidres","piles"]],
+  ["higiene","Higiene",["pañuelos","pañuelos desmaquilladores","champú","gel de ducha","pasta de dientes","desodorante","compresas","cepillo de dientes","xampú","gel","gel de dutxa","pasta de dents","raspall","desodorant","compreses","tampons","bolquers","crema","maquinetes","cotó","bastonets","colònia"]],
   ["altres","Altres",[]]
 ];
 const AISLE_IDX=Object.fromEntries(AISLES.map((a,i)=>[a[0],i]));
@@ -319,6 +319,18 @@ function prune(s){
 const live=()=>state.items.filter(i=>!i.del);
 const liveHist=()=>Object.entries(state.history).filter(([,h])=>!h.del);
 
+
+
+/* ---------- productes importats de Bring (es posen a l'historial un sol cop) ---------- */
+const SEED_U=Date.UTC(2026,9,5,11,0,0);
+const SEED=[["Maíz","rebost"],["Pollo","carn"],["Tomates","fruita"],["Cebolla crujiente","rebost"],["Pan de hamburguesa","forn"],["Papel albal","neteja"],["Limón","fruita"],["Cebollas","fruita"],["Arroz","rebost"],["Humus","lactics"],["Pizza","congelats"],["Tomates cherry","fruita"],["Aquarius","begudes"],["Helado","congelats"],["Picos","forn"],["Huevos","lactics"],["Leche","lactics"],["Pañuelos desmaquilladores","higiene"],["Líquido lavavajillas","neteja"],["Galletas","rebost"],["Picatostes","forn"],["Palomitas","rebost"],["Vinagre balsámico","rebost"]];
+(function seedHistory(){
+  if(LS.get("seeded_bring",false))return;
+  let added=false;
+  SEED.forEach(([name,cat],i)=>{const k=key(name);if(!state.history[k]){state.history[k]={name,cat,count:1,last:SEED_U-i*60000,u:SEED_U};added=true}});
+  LS.set("seeded_bring",true);
+  if(added){dirty=true;persist()}
+})();
 
 /* ---------- actions (amb desfer) ---------- */
 ui.sort="freq";
