@@ -144,6 +144,37 @@ form.add{display:flex;gap:8px;background:var(--surface);border-radius:20px;box-s
 .login .big{font-size:1.5rem;font-weight:800}
 .login p{margin:0;color:var(--muted);max-width:32ch}
 .login .btn{flex:none;padding:15px 26px}
+/* icones + vista mosaic */
+.ico{flex:none;width:40px;height:40px;border-radius:12px;background:var(--accent-soft);display:grid;place-items:center;font-size:24px;line-height:1}
+.row.done .ico{filter:grayscale(1);opacity:.5}
+.hrow .ico{width:38px;height:38px;font-size:22px}
+.row .check+.ico{margin-left:-4px}
+.viewtog{display:flex;background:var(--surface);box-shadow:var(--shadow);border-radius:999px;padding:3px;gap:2px}
+.viewtog button{width:36px;height:34px;border:0;border-radius:999px;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer;padding:0}
+.viewtog button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (min-width:480px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.tile{position:relative;border:0;background:var(--surface);border-radius:18px;box-shadow:var(--shadow);aspect-ratio:1/1;max-width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px 6px;text-align:center;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.tile:active{transform:scale(.97)}
+.tile .e{font-size:40px;line-height:1}
+.tile .n{font-size:.82rem;font-weight:600;line-height:1.15;overflow-wrap:anywhere;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tile .q{position:absolute;top:7px;right:7px;font-size:.74rem;font-weight:700;color:var(--accent-ink);background:var(--accent);border-radius:999px;padding:1px 7px;font-variant-numeric:tabular-nums}
+.tile .te{position:absolute;top:2px;left:2px;width:36px;height:36px;border:0;background:transparent;border-radius:12px;color:var(--muted);display:grid;place-items:center;cursor:pointer;opacity:.8}
+.tile.done{background:var(--accent)}
+.tile.done .n{color:var(--accent-ink)}
+.tile.done .e{filter:saturate(.6)}
+.tile.done .te{color:var(--accent-ink)}
+.tile.done .q{background:var(--accent-ink);color:var(--accent)}
+.tile.sug{background:transparent;box-shadow:none;border:1.5px dashed var(--line)}
+.tile.sug .n{color:var(--muted)}
+.tile.sug .plus{position:absolute;top:6px;right:9px;color:var(--accent);font-weight:800;font-size:1.1rem}
+.picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px}
+.picker button{height:44px;border:1.5px solid transparent;border-radius:12px;background:var(--bg);font-size:24px;cursor:pointer;padding:0;line-height:1}
+.picker button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.icon-now{display:flex;align-items:center;gap:12px}
+.icon-now .big{font-size:40px;line-height:1}
+.icon-now .textbtn{padding:4px}
+@media (prefers-reduced-motion: no-preference){.tile{transition:transform .1s,background .15s}}
 @media (prefers-reduced-motion: no-preference){
   .row{transition:background .15s}.check{transition:background .15s,border-color .15s}
   .toast{animation:up .2s ease-out}@keyframes up{from{opacity:0;transform:translate(-50%,10px)}}
@@ -154,9 +185,13 @@ form.add{display:flex;gap:8px;background:var(--surface);border-radius:20px;box-s
 <div class="wrap">
   <header>
     <div class="top">
-      <h1>La compra</h1>
+      <h1 id="title">La compra</h1>
       <div class="top-r">
         <span class="status" id="status"></span>
+        <div class="viewtog" role="group" aria-label="Vista">
+          <button id="vList" aria-pressed="true" aria-label="Vista de llista"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.2" fill="currentColor"/><circle cx="4.5" cy="12" r="1.2" fill="currentColor"/><circle cx="4.5" cy="18" r="1.2" fill="currentColor"/></svg></button>
+          <button id="vGrid" aria-pressed="false" aria-label="Vista de mosaic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/></svg></button>
+        </div>
         <button class="round" id="settingsBtn" aria-label="Configuració">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
         </button>
@@ -217,11 +252,12 @@ form.add{display:flex;gap:8px;background:var(--surface);border-radius:20px;box-s
 <div class="sheet" id="editSheet" hidden>
   <div class="sheet-in">
     <div class="grab"></div>
-    <label class="field">Nom<input id="eName" autocomplete="off"></label>
+    <div class="icon-now"><span class="big" id="eIconNow">🛒</span><label class="field" style="flex:1">Nom<input id="eName" autocomplete="off"></label></div>
     <div class="field">Quantitat
       <div class="stepper"><button type="button" id="eMinus" aria-label="Menys">−</button><output id="eQty">1</output><button type="button" id="ePlus" aria-label="Més">+</button></div>
     </div>
     <div class="field">Secció del súper<div class="aisles" id="eAisles"></div></div>
+    <div class="field"><span style="display:flex;justify-content:space-between;align-items:center">Icona <button type="button" class="textbtn" id="eIconAuto">Automàtica</button></span><div class="picker" id="ePicker"></div></div>
     <div class="btns">
       <button class="btn primary" id="eSave">Fet</button>
       <button class="btn danger" id="eDel">Eliminar</button>
@@ -336,6 +372,107 @@ const OLD_ES=["Maíz","Pollo","Tomates","Cebolla crujiente","Pan de hamburguesa"
   LS.set("seeded_bring_ca",true);dirty=true;persist();
 })();
 
+
+/* ---------- icones (emojis del mòbil) ---------- */
+const ICONS=[
+ ["🍅","tomàquet|tomàquets|tomaquet|tomate|tomates"],
+ ["🍒","tomàquets cherry|tomates cherry|cireres"],
+ ["🍋","llimona|llimones|limón|limon|limones"],
+ ["🧅","ceba|cebes|cebolla|cebollas"],
+ ["🧄","all|alls|ajo|ajos"],
+ ["🥔","patata|patates|patatas"],
+ ["🥕","pastanaga|pastanagues|zanahoria|zanahorias"],
+ ["🥬","enciam|lechuga|espinacs|espinacas"],
+ ["🥦","bròquil|brócoli|coliflor"],
+ ["🥒","cogombre|pepino|carbassó|calabacín"],
+ ["🍆","albergínia|berenjena"],
+ ["🫑","pebrot|pebrots|pimiento|pimientos"],
+ ["🌽","blat de moro|maíz|maiz"],
+ ["🍄","bolets|xampinyons|champiñones|setas"],
+ ["🥑","alvocat|alvocats|aguacate"],
+ ["🍎","poma|pomes|manzana|manzanas"],
+ ["🍐","pera|peres"],
+ ["🍌","plàtan|plàtans|platan|plátano|plátanos"],
+ ["🍊","taronja|taronges|mandarina|mandarines|naranja|naranjas"],
+ ["🍇","raïm|uvas"],
+ ["🍓","maduixa|maduixes|fresas"],
+ ["🍉","síndria|sandía"],
+ ["🍈","meló|melón"],
+ ["🥝","kiwi|kiwis"],
+ ["🍑","préssec|préssecs|melocotón"],
+ ["🌿","julivert|perejil|api"],
+ ["🍗","pollastre|pollo|pit de pollastre|pechuga|gall dindi|pavo"],
+ ["🥩","carn|carn picada|vedella|ternera|porc|cerdo|xai|llom|lomo"],
+ ["🍔","hamburguesa|hamburgueses|pa d'hamburguesa|pan de hamburguesa"],
+ ["🌭","salsitxes|salchichas|frankfurt|botifarra"],
+ ["🥓","bacó|bacon"],
+ ["🍖","pernil|pernil dolç|jamón|embotit|fuet"],
+ ["🐟","peix|pescado|lluç|merluza|bacallà|salmó|salmón|sardines"],
+ ["🦐","gambes|gambas|llagostins"],
+ ["🦑","calamars|calamares"],
+ ["🥛","llet|leche|llet de civada|beguda de civada"],
+ ["🧀","formatge|formatge ratllat|queso"],
+ ["🥚","ous|ou|huevos|huevo"],
+ ["🧈","mantega|mantequilla"],
+ ["🍶","iogurt|iogurts|yogur|yogures|kefir"],
+ ["🫙","hummus|humus"],
+ ["🍞","pa de motlle|pan de molde|torrades|biscotes|pa integral"],
+ ["🥖","pa|barra|barra de pa|pan|picos"],
+ ["🥐","croissant|croissants"],
+ ["🧁","magdalenes|magdalenas"],
+ ["🥯","crostons|picatostes"],
+ ["🍚","arròs|arroz"],
+ ["🍝","pasta|macarrons|espaguetis|fideus|macarrones"],
+ ["🫘","cigrons|llenties|mongetes|llegums|garbanzos|lentejas"],
+ ["🫒","oli|oli d'oliva|aceite|aceite de oliva|olives|aceitunas"],
+ ["🍶","vinagre|vinagre balsàmic|vinagre balsámico"],
+ ["🧂","sal|pebre|espècies|especias"],
+ ["☕","cafè|café"],
+ ["🍵","te"],
+ ["🥣","cereals|cereales"],
+ ["🍫","xocolata|chocolate|cacau"],
+ ["🍯","mel|miel|melmelada|mermelada"],
+ ["🍪","galetes|galeta|galletas"],
+ ["🍿","crispetes|palomitas"],
+ ["🥜","fruits secs|ametlles|nous|cacauets|frutos secos"],
+ ["🥫","conserves|tonyina|atún|tomàquet fregit|tomate frito"],
+ ["🧅","ceba cruixent|cebolla crujiente"],
+ ["🍟","patates fregides|patatas fritas"],
+ ["🌾","farina|harina|llevat"],
+ ["🍬","sucre|azúcar"],
+ ["💧","aigua|agua"],
+ ["🍷","vi|vino"],
+ ["🍺","cervesa|cerveses|cerveza"],
+ ["🧃","suc|sucs|zumo"],
+ ["🥤","refresc|refrescos|cola|coca-cola|aquarius|tònica"],
+ ["🍾","cava"],
+ ["🍕","pizza|pizzes"],
+ ["🍦","gelat|gelats|helado|helados"],
+ ["🧊","glaçons|hielo|congelats"],
+ ["🫛","pèsols|guisantes"],
+ ["🧽","fregall|esponja|esponges|estropajo"],
+ ["🧴","sabó rentaplats|rentaplats|lavavajillas|líquido lavavajillas|detergent|detergente|suavitzant|lleixiu|crema|desodorant|colònia"],
+ ["🧻","paper de vàter|paper higiènic|papel higiénico|paper de cuina|tovallons|servilletas"],
+ ["🧻","paper d'alumini|papel albal|film"],
+ ["🗑️","bosses d'escombraries|bolsas de basura|bosses"],
+ ["🔋","piles"],
+ ["🪥","pasta de dents|raspall|cepillo de dientes"],
+ ["🧼","gel|gel de dutxa|xampú|champú"],
+ ["🤧","mocadors|mocadors desmaquillants|pañuelos|pañuelos desmaquilladores"],
+ ["🩹","compreses|tampons"],
+ ["👶","bolquers|pañales"]
+];
+const AISLE_ICON={fruita:"🥬",carn:"🥩",lactics:"🥛",forn:"🥖",rebost:"🥫",begudes:"🧃",congelats:"🧊",neteja:"🧽",higiene:"🧴",altres:"🛒"};
+const ICON_INDEX=[];ICONS.forEach(([e,w])=>w.split("|").forEach(p=>ICON_INDEX.push([p,e])));
+function guessIcon(name){
+  const n=" "+key(name)+" ";let best=null,len=0;
+  for(const [w,e] of ICON_INDEX){if(w.length>len&&n.includes(" "+w+" ")){best=e;len=w.length}}
+  return best;
+}
+const iconFor=o=>o.icon||guessIcon(o.name)||AISLE_ICON[o.cat]||"🛒";
+const PICKER=["🍅","🍋","🧅","🥔","🥕","🥬","🥦","🥒","🌽","🍎","🍌","🍊","🍇","🍓","🥑","🍗","🥩","🍔","🌭","🐟","🦐","🥛","🧀","🥚","🧈","🍶","🍞","🥖","🥐","🍚","🍝","🫘","🫒","🧂","☕","🍫","🍯","🍪","🍿","🥜","🥫","💧","🍷","🍺","🧃","🥤","🍕","🍦","🧊","🧽","🧴","🧻","🧾","🪥","🧼","🤧","👶","🐶","🐱","💊","🎂","🛒"];
+let view=LS.get("view","list");
+
 /* ---------- actions (amb desfer) ---------- */
 ui.sort="freq";
 let undoFn=null,toastTimer=null;
@@ -353,7 +490,7 @@ function restore(copy,histCopy,k){
 }
 function bumpHistory(it){
   const k=key(it.name),h=state.history[k];
-  state.history[k]={name:it.name,cat:it.cat,count:(h&&!h.del?h.count:0)+1,last:Date.now(),u:Date.now()};
+  state.history[k]={name:it.name,cat:it.cat,icon:it.icon||(h&&!h.del?h.icon:"")||"",count:(h&&!h.del?h.count:0)+1,last:Date.now(),u:Date.now()};
 }
 function addItem(raw,qtyOverride){
   const {qty,name}=parseInput(raw);if(!name)return;
@@ -366,7 +503,7 @@ function addItem(raw,qtyOverride){
     ex.u=now;
   }else{
     const h=state.history[k];
-    const it={id:uid(),name:h&&!h.del?h.name:cap(name),qty:q,cat:h&&!h.del?h.cat:guessAisle(name),done:false,u:now};
+    const it={id:uid(),name:h&&!h.del?h.name:cap(name),qty:q,cat:h&&!h.del?h.cat:guessAisle(name),icon:h&&!h.del&&h.icon||"",done:false,u:now};
     state.items.push(it);
   }
   change();
@@ -408,6 +545,7 @@ function render(){
   $("tabList").setAttribute("aria-selected",ui.tab==="list");
   $("tabHist").setAttribute("aria-selected",ui.tab==="hist");
   if(tok){$("viewList").hidden=ui.tab!=="list";$("viewHist").hidden=ui.tab!=="hist"}
+  $("vList").setAttribute("aria-pressed",view==="list");$("vGrid").setAttribute("aria-pressed",view==="grid");
   ui.tab==="list"?renderList(pending,done):renderHist(pending);
   renderSugg(pending);
 }
@@ -421,20 +559,39 @@ function renderList(pending,done){
     const on=new Set(items_live_keys());
     liveHist().filter(([k])=>!on.has(k)).sort((a,b)=>b[1].count-a[1].count).slice(0,8).forEach(([,h])=>q.append(chip(h.name,()=>addItem(h.name))));
   }
+  const grid=view==="grid";
+  const wrapper=()=>el("div",grid?"grid":"card");
+  const make=grid?itemTile:itemRow;
   const groups=AISLES.map(()=>[]);
   pending.forEach(i=>groups[AISLE_IDX[i.cat]??AISLE_IDX.altres].push(i));
-  groups.forEach((rows,gi)=>{
+  groups.forEach(rows=>rows.sort((a,b)=>a.name.localeCompare(b.name,"ca")));
+  if(grid&&pending.length){
+    // mosaic: un sol bloc, ordenat per seccions del súper
+    const g=el("section","group");const c=wrapper();
+    groups.flat().forEach(r=>c.append(make(r)));g.append(c);box.append(g);
+  }else groups.forEach((rows,gi)=>{
     if(!rows.length)return;
-    rows.sort((a,b)=>a.name.localeCompare(b.name,"ca"));
     const g=el("section","group");g.append(el("h2",null,AISLES[gi][1]));
-    const c=el("div","card");rows.forEach(r=>c.append(itemRow(r)));g.append(c);box.append(g);
+    const c=wrapper();rows.forEach(r=>c.append(make(r)));g.append(c);box.append(g);
   });
   if(done.length){
     const g=el("section","group");
     const h=el("div","cart-h");h.append(el("h2",null,`Al carro (${done.length})`));
     const b=el("button","textbtn","Treure del carro");b.onclick=clearCart;h.append(b);
-    const c=el("div","card");done.sort((a,b)=>b.u-a.u).forEach(r=>c.append(itemRow(r)));
+    const c=wrapper();done.sort((a,b)=>b.u-a.u).forEach(r=>c.append(make(r)));
     g.append(h,c);box.append(g);
+  }
+  if(grid&&pending.length){
+    const on=new Set(live().map(i=>key(i.name)));
+    const sug=liveHist().filter(([k])=>!on.has(k)).sort((a,b)=>b[1].count-a[1].count||b[1].last-a[1].last).slice(0,9);
+    if(sug.length){
+      const g=el("section","group");g.append(el("h2",null,"Compres sovint · toca per afegir"));
+      const c=el("div","grid");
+      sug.forEach(([,h])=>{const t=el("button","tile sug");t.type="button";
+        t.append(el("span","plus","+"),el("span","e",iconFor(h)),el("span","n",h.name));
+        t.onclick=()=>{addItem(h.name);toast(`${h.name} afegit a la llista`)};c.append(t)});
+      g.append(c);box.append(g);
+    }
   }
 }
 function items_live_keys(){return live().filter(i=>!i.done).map(i=>key(i.name))}
@@ -444,7 +601,7 @@ function itemRow(it){
   r.setAttribute("role","checkbox");r.setAttribute("aria-checked",it.done);r.tabIndex=0;
   const c=el("span","check");c.innerHTML=CHECK;
   const l=el("span","label",it.name);
-  r.append(c,l);
+  r.append(c,el("span","ico",iconFor(it)),l);
   if(it.qty>1)r.append(el("span","qty","×"+it.qty));
   const e=el("button","edit");e.innerHTML=PENCIL;e.setAttribute("aria-label","Editar "+it.name);
   e.onclick=ev=>{ev.stopPropagation();openEdit(it.id)};
@@ -452,6 +609,19 @@ function itemRow(it){
   r.onclick=()=>toggle(it.id);
   r.onkeydown=ev=>{if(ev.key===" "||ev.key==="Enter"){ev.preventDefault();toggle(it.id)}};
   return r;
+}
+
+function itemTile(it){
+  const t=el("div","tile"+(it.done?" done":""));
+  t.setAttribute("role","checkbox");t.setAttribute("aria-checked",it.done);t.setAttribute("aria-label",it.name);t.tabIndex=0;
+  const e=el("button","te");e.innerHTML=PENCIL.replace(/19/g,"16");e.setAttribute("aria-label","Editar "+it.name);
+  e.onclick=ev=>{ev.stopPropagation();openEdit(it.id)};
+  t.append(e);
+  if(it.qty>1)t.append(el("span","q","×"+it.qty));
+  t.append(el("span","e",iconFor(it)),el("span","n",it.name));
+  t.onclick=()=>toggle(it.id);
+  t.onkeydown=ev=>{if(ev.key===" "||ev.key==="Enter"){ev.preventDefault();toggle(it.id)}};
+  return t;
 }
 
 function renderHist(pending){
@@ -466,7 +636,7 @@ function renderHist(pending){
   if(!rows.length){if(q)box.append(el("div","empty","No hi ha cap producte amb aquest nom."));return}
   const c=el("div","card");
   for(const [k,h] of rows){
-    const r=el("div","hrow"),info=el("div","hinfo");
+    const r=el("div","hrow"),info=el("div","hinfo");r.append(el("span","ico",iconFor(h)));
     info.append(el("div","hname",h.name));
     info.append(el("div","hmeta",`Comprat ${h.count} ${h.count===1?"cop":"cops"} · ${ago(h.last)}`));
     const inList=onList.has(k);
@@ -498,21 +668,34 @@ function renderSugg(pending){
 }
 
 /* ---------- editar producte ---------- */
-let editId=null,eQty=1,eCat="altres";
+let editId=null,eQty=1,eCat="altres",eIcon="";
 function openEdit(id){
   const it=state.items.find(i=>i.id===id);if(!it)return;
   editId=id;eQty=it.qty;eCat=AISLE_IDX[it.cat]!=null?it.cat:"altres";
-  $("eName").value=it.name;$("eQty").textContent=eQty;drawAisles();$("editSheet").hidden=false;
+  eIcon=it.icon||"";
+  $("eName").value=it.name;$("eQty").textContent=eQty;drawAisles();drawPicker();$("editSheet").hidden=false;
 }
 function drawAisles(){
   const box=$("eAisles");box.innerHTML="";
-  AISLES.forEach(([id,label])=>{const b=el("button",null,label);b.type="button";b.setAttribute("aria-pressed",id===eCat);b.onclick=()=>{eCat=id;drawAisles()};box.append(b)});
+  AISLES.forEach(([id,label])=>{const b=el("button",null,label);b.type="button";b.setAttribute("aria-pressed",id===eCat);b.onclick=()=>{eCat=id;drawAisles();drawPicker()};box.append(b)});
 }
+function drawPicker(){
+  const cur=eIcon||guessIcon($("eName").value)||AISLE_ICON[eCat]||"🛒";
+  $("eIconNow").textContent=cur;$("eIconAuto").hidden=!eIcon;
+  const box=$("ePicker");box.innerHTML="";
+  PICKER.forEach(em=>{const b=el("button",null,em);b.type="button";b.setAttribute("aria-pressed",!!eIcon&&em===eIcon);b.onclick=()=>{eIcon=em;drawPicker()};box.append(b)});
+}
+$("eIconAuto").onclick=()=>{eIcon="";drawPicker()};
+$("eName").addEventListener("input",()=>{if(!eIcon)drawPicker()});
 $("eMinus").onclick=()=>{if(eQty>1){eQty--;$("eQty").textContent=eQty}};
 $("ePlus").onclick=()=>{eQty++;$("eQty").textContent=eQty};
 $("eSave").onclick=()=>{
   const n=$("eName").value.trim();const it=state.items.find(i=>i.id===editId);
-  if(it&&n&&(n!==it.name||eQty!==it.qty||eCat!==it.cat)){patch(editId,{name:cap(n),qty:eQty,cat:eCat});change()}
+  if(it&&n&&(n!==it.name||eQty!==it.qty||eCat!==it.cat||eIcon!==(it.icon||""))){
+    patch(editId,{name:cap(n),qty:eQty,cat:eCat,icon:eIcon});
+    const h=state.history[key(cap(n))];if(h&&!h.del&&(h.icon||"")!==eIcon){h.icon=eIcon;h.cat=eCat;h.u=Date.now()}
+    change();
+  }
   $("editSheet").hidden=true;editId=null;
 };
 $("eDel").onclick=()=>{const id=editId;$("editSheet").hidden=true;editId=null;removeItem(id)};
@@ -602,14 +785,14 @@ function fromWorkbook(wb){
     let id=String(r["id"]||"").trim(),u=Number(r["actualitzat"])||0;
     if(!id){id=uid();u=now;fixedOnRead=true}
     const cat=r["Passadís"]?toAisle(r["Passadís"]):guessAisle(name);
-    items.push({id,name,qty:Math.max(1,parseInt(r["Quantitat"],10)||1),cat,done:yes(r["Comprat"]),u});
+    items.push({id,name,qty:Math.max(1,parseInt(r["Quantitat"],10)||1),cat,icon:String(r["Icona"]||"").trim(),done:yes(r["Comprat"]),u});
   }
   for(const r of rows("Historial")){
     const name=String(r["Producte"]||"").trim();if(!name)continue;
     const k=String(r["clau"]||"").trim()||key(name);
     let u=Number(r["actualitzat"])||0;if(!r["clau"]){u=now;fixedOnRead=true}
     const lc=r["Última compra"];const last=lc instanceof Date?lc.getTime():(Date.parse(lc)||u||now);
-    history[k]={name,cat:r["Passadís"]?toAisle(r["Passadís"]):guessAisle(name),count:parseInt(r["Vegades"],10)||1,last,u};
+    history[k]={name,icon:String(r["Icona"]||"").trim(),cat:r["Passadís"]?toAisle(r["Passadís"]):guessAisle(name),count:parseInt(r["Vegades"],10)||1,last,u};
   }
   for(const r of rows("_sync")){
     const u=Number(r.u)||0;
@@ -621,11 +804,11 @@ function fromWorkbook(wb){
 function toWorkbook(s){
   const wb=XLSX.utils.book_new();
   const live=s.items.filter(i=>!i.del).sort((a,b)=>(AISLE_IDX[a.cat]-AISLE_IDX[b.cat])||a.name.localeCompare(b.name,"ca"));
-  const ws1=XLSX.utils.json_to_sheet(live.map(i=>({"Producte":i.name,"Quantitat":i.qty,"Passadís":label(i.cat),"Comprat":i.done?"Sí":"No","id":i.id,"actualitzat":i.u})),{header:["Producte","Quantitat","Passadís","Comprat","id","actualitzat"]});
-  ws1["!cols"]=[{wch:28},{wch:10},{wch:18},{wch:9},{hidden:true},{hidden:true}];
+  const ws1=XLSX.utils.json_to_sheet(live.map(i=>({"Producte":i.name,"Quantitat":i.qty,"Passadís":label(i.cat),"Comprat":i.done?"Sí":"No","Icona":i.icon||"","id":i.id,"actualitzat":i.u})),{header:["Producte","Quantitat","Passadís","Comprat","Icona","id","actualitzat"]});
+  ws1["!cols"]=[{wch:28},{wch:10},{wch:18},{wch:9},{wch:7},{hidden:true},{hidden:true}];
   const hist=Object.entries(s.history).filter(([,h])=>!h.del).sort((a,b)=>b[1].count-a[1].count);
-  const ws2=XLSX.utils.json_to_sheet(hist.map(([k,h])=>({"Producte":h.name,"Passadís":label(h.cat),"Vegades":h.count,"Última compra":new Date(h.last),"clau":k,"actualitzat":h.u})),{header:["Producte","Passadís","Vegades","Última compra","clau","actualitzat"],cellDates:true,dateNF:"dd/mm/yyyy"});
-  ws2["!cols"]=[{wch:28},{wch:18},{wch:9},{wch:14},{hidden:true},{hidden:true}];
+  const ws2=XLSX.utils.json_to_sheet(hist.map(([k,h])=>({"Producte":h.name,"Passadís":label(h.cat),"Vegades":h.count,"Última compra":new Date(h.last),"Icona":h.icon||"","clau":k,"actualitzat":h.u})),{header:["Producte","Passadís","Vegades","Última compra","Icona","clau","actualitzat"],cellDates:true,dateNF:"dd/mm/yyyy"});
+  ws2["!cols"]=[{wch:28},{wch:18},{wch:9},{wch:14},{wch:7},{hidden:true},{hidden:true}];
   const tomb=[...s.items.filter(i=>i.del).map(i=>({tipus:"item",id:i.id,u:i.u})),...Object.entries(s.history).filter(([,h])=>h.del).map(([k,h])=>({tipus:"hist",id:k,u:h.u}))];
   const ws3=XLSX.utils.json_to_sheet(tomb,{header:["tipus","id","u"]});
   XLSX.utils.book_append_sheet(wb,ws1,"Llista");
@@ -721,6 +904,8 @@ $("addForm").addEventListener("submit",e=>{
   inp.focus();renderSugg(live().filter(i=>!i.done));
 });
 $("newItem").addEventListener("input",()=>renderSugg(live().filter(i=>!i.done)));
+$("vList").onclick=()=>{view="list";LS.set("view",view);render()};
+$("vGrid").onclick=()=>{view="grid";LS.set("view",view);render()};
 $("tabList").onclick=()=>{ui.tab="list";render();scrollTo(0,0)};
 $("tabHist").onclick=()=>{ui.tab="hist";render();scrollTo(0,0)};
 $("histSearch").addEventListener("input",e=>{ui.q=e.target.value;render()});
